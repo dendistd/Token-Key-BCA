@@ -24,9 +24,6 @@ public interface TokenService {
 
 	//UPDATE CABANG
 	public ResponseUpdateToken updateTokenCabang (InputUpdateToken input);
-	
-	//UPDATE STATUS
-	public ResponseUpdateTokenStatus updateTokenStatus (InputUpdateTokenStatus input);
-	
+		
 	public List<ResponseDataToken> findTokenByStatus(InputFindStatus input);
 }

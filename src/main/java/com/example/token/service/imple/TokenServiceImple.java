@@ -12,6 +12,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.token.model.Cabang;
 import com.example.token.model.TokenModel;
 import com.example.token.payload.token.InputCreateToken;
 import com.example.token.payload.token.InputDeleteToken;
@@ -22,6 +23,7 @@ import com.example.token.payload.token.ResponseCreateToken;
 import com.example.token.payload.token.ResponseDataToken;
 import com.example.token.payload.token.ResponseUpdateToken;
 import com.example.token.payload.token.ResponseUpdateTokenStatus;
+import com.example.token.repository.CabangRepo;
 import com.example.token.repository.TokenRepo;
 import com.example.token.service.TokenService;
 
@@ -29,6 +31,8 @@ import com.example.token.service.TokenService;
 public class TokenServiceImple implements TokenService {
 	@Autowired
 	TokenRepo tokenRepo;
+	@Autowired
+	CabangRepo cabangRepo;
 	
 	//FUNGSI UNTUK NUMBER LOG
 	public String logNumber() {
@@ -62,14 +66,7 @@ public class TokenServiceImple implements TokenService {
 		/* String id, String serialNumber, String cabang, String status */
 		TokenModel objToken = new TokenModel(stringId,input.getSerialNumber().toUpperCase(), input.getStatus().toUpperCase());
 		ResponseCreateToken result = new ResponseCreateToken(); 
-		/* 	KONDISI : 
-		 * 	a.	cabang bernilai NULL
-			b.	status bernilai BARU
-			c.	pastikan serialNumber tidak sama dengan data di database
-			d.	Jika semua kondisi terpenuhi maka lakukan simpan data. Jika ada kondisi tidak terpenuhi maka batal simpan data.
-			e.	Kirim error code dan message sesuai dengan kondisi */
-	
-//		if(tokenRepo.existsBySerialNumber(input.getSerialNumber().toUpperCase()) == false && input.getStatus().equalsIgnoreCase("baru")) {
+
 		if(tokenRepo.existsBySerialNumber(input.getSerialNumber().toUpperCase()) == false ) {
 			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - SN BELUM ADA Dalam DB");
 			if(input.getStatus().equalsIgnoreCase("baru")) {
@@ -80,10 +77,9 @@ public class TokenServiceImple implements TokenService {
 			else {
 				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Value Status Tidak Memenuhi Syarat");
 				objToken.setStatus("");
-			}
-
-			
+			}			
 		}
+		
 		else {
 			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - SN Sudah ADA Dalam DB");
 			objToken.setSerialNumber("");			
@@ -109,25 +105,32 @@ public class TokenServiceImple implements TokenService {
 		
 		TokenModel findData = tokenRepo.findBySerialNumber(input.getSerialNumber().toUpperCase());
 		ResponseDataToken objToken = new ResponseDataToken(findData.getId(), findData.getSerialNumber(), findData.getCabang(), findData.getStatus());
-		/* String id, String serialNumber, String cabang, String status */
 		System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Data Berhasil Ditemukan");
-		//JIKA VALUE FIELD STATUS SUDAH BERNILAI "HAPUS" -> RETURNKAN STRING ""
-		if(!findData.getStatus().equalsIgnoreCase("hapus")) {
-//			tokenRepo.deleteBySerialNumber(serialNumber);
-			findData.setStatus("HAPUS");
-			findData = tokenRepo.save(findData);
-			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Data Sudah Terhapus");
+		
+		//TIDAK BISA DELETE -> STATUS "AKTIF"
+		if(findData.getStatus().equals("AKTIF")) {
+			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Tidak Bisa Delete Data -> Status 'AKTIF'");
+			objToken.setStatus("Can't Delete");
+			return objToken;
 		}
-		else {
+		//TIDAK BISA DELETE DATA YANG SUDAH DIHAPUS
+		if(findData.getStatus().equalsIgnoreCase("hapus")) {
 			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Tidak Bisa Menghapus Data Yang Sudah Terhapus");
 			objToken.setStatus("");
 			return objToken;
 		}
+		//JIKA VALUE FIELD STATUS SUDAH BERNILAI "HAPUS" -> RETURNKAN STRING ""
+		if(!findData.getStatus().equalsIgnoreCase("hapus")) {
+			findData.setStatus("HAPUS");
+			findData = tokenRepo.save(findData);
+			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Data Sudah Terhapus");
+		}
+		
 		objToken.setStatus(findData.getStatus());
 		return objToken;
 	}
 	
-	//UPDATE Cabang
+	//UPDATE TOKEN
 	public ResponseUpdateToken updateTokenCabang (InputUpdateToken input) {
 		String valueLog = logNumber();
 		ResponseUpdateToken responGagal = new ResponseUpdateToken();
@@ -141,13 +144,14 @@ public class TokenServiceImple implements TokenService {
 		System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Berhasil Menemukan Data");
 		/* String id, String serialNumberOld, String cabangOld, String statusOld */
 		ResponseUpdateToken response = new ResponseUpdateToken(objToken.getId(), objToken.getSerialNumber(), objToken.getCabang(), objToken.getStatus());
-		
+		Cabang dataCabang = cabangRepo.findById(input.getCabang().toUpperCase()).get();
 		//Bisa update -> CABANG DB BEDA DENGAN INPUT CABANG 
-		if(!(objToken.getCabang().equalsIgnoreCase(input.getCabang()) ) ) {
-			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Cabang DB BEDA Dengan Input");
+//		if(!(objToken.getCabang().equalsIgnoreCase(input.getCabang()) ) ) {
+		if(!objToken.getCabang().startsWith(input.getCabang().toUpperCase()) ) {
+			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Kondisi Bisa Update");
 			if(!input.getCabang().equals("") && !input.getCabang().startsWith(" ")) {
 				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Value Cabang BUKAN String Kosong atau Berisi Spasi");
-				objToken.setCabang(input.getCabang().toUpperCase());
+				objToken.setCabang(dataCabang.getKodeCabang() + " - " + dataCabang.getNamaCabang());
 				response.setCabangNew(objToken.getCabang().toUpperCase());
 
 			}
@@ -188,48 +192,6 @@ public class TokenServiceImple implements TokenService {
 		objToken = tokenRepo.save(objToken);
 		System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Data Berhasil Di Update = " + objToken.toString());
 
-		return response;
-	}
-
-	//UPDATE TOKEN STATUS
-	public ResponseUpdateTokenStatus updateTokenStatus (InputUpdateTokenStatus input) {
-		String valueLog = logNumber();
-		ResponseUpdateTokenStatus responGagal = new ResponseUpdateTokenStatus();
-		//JIKA DATA TIDAK DITEMUKAN
-		if(tokenRepo.existsBySerialNumber(input.getSerialNumber()) == false) {
-			responGagal.setSerialNumber("");
-			return responGagal;
-		}
-		TokenModel objToken = tokenRepo.findBySerialNumber(input.getSerialNumber());
-		System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Berhasil Menemukan Data");
-		/* String id, String serialNumberOld, String cabangOld, String statusOld */
-		ResponseUpdateTokenStatus response = new ResponseUpdateTokenStatus(objToken.getId(), objToken.getSerialNumber(), objToken.getCabang(), objToken.getStatus());
-		
-		//BISA UPDATE-> status DB dan input status BEDA 
-		if(!(objToken.getStatus().equalsIgnoreCase(input.getStatus()) ) ) {
-			//BISA UPDATE STATUS SESUAI KONDISI SOAL-> BARU, AKTIF, TDK AKTIF,TUTUP
-			if(input.getStatus().equalsIgnoreCase("baru") || input.getStatus().equalsIgnoreCase("aktif") || input.getStatus().equalsIgnoreCase("tdk aktif") || input.getStatus().equalsIgnoreCase("tutup")) {
-				objToken.setStatus(input.getStatus().toUpperCase());
-				objToken = tokenRepo.save(objToken);
-				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Data Berhasil Di Update = " + objToken.toString());
-				
-			}
-			
-			//TIDAK BISA UPDATE STATUS KARNA VALUE NYA TIDAK SESUAI KONDISI
-			else {
-				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Tidak Bisa Update Data");
-				response.setStatusNew("");
-				return response;
-			}
-		}
-		//JIKA TIDAK ADA UPDATE 
-		else {
-			response.setStatusNew("No Update");
-			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Tidak Ada Update Data");
-			return response;
-		}
-	
-		response.setStatusNew(input.getStatus().toUpperCase());
 		return response;
 	}
 	

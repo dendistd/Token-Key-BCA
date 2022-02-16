@@ -107,7 +107,8 @@ public class KoneksiServiceImple implements KoneksiService {
 		TokenModel objToken = new TokenModel();
 		
 		//CEK KONDISI SESUAI PROSES BISNIS
-		if(koneksiRepo.cekSNKoneksi(input.getSerialNumber().toUpperCase()).size() > 0 && input.getStatus().equalsIgnoreCase("aktif") && !koneksiRepo.existsByUserId(input.getUserId()) && cabangRepo.existsById(input.getKodeCabang().toUpperCase())  ) {
+		if(koneksiRepo.cekSNKoneksi(input.getSerialNumber().toUpperCase()).size() > 0 && input.getStatus().equalsIgnoreCase("aktif") && !koneksiRepo.existsByUserId(input.getUserId()) && cabangRepo.findById(input.getKodeCabang().toUpperCase()).get().getStatus().equals("AKTIF")) {
+
 			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Input Param Memenuhi Syarat");
 			koneksi.setId(RandomStringUtils.randomAlphanumeric(20).toUpperCase());
 			koneksi.setSerialNumber(input.getSerialNumber().toUpperCase());
@@ -146,13 +147,14 @@ public class KoneksiServiceImple implements KoneksiService {
 				
 				//UPDATE VALUE CABANG PADA DENDI_TOKEN -> KODE_CABANG - NAMA_CABANG
 				objToken.setCabang(cabang.getKodeCabang() + " - "+cabang.getNamaCabang());
+				objToken.setStatus("AKTIF");
 				objToken = tokenRepo.save(objToken);
 				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Update Cabang Pada Dendi_Token Berhasil");
 				
 				//HISTORY KONEKSI
 				hk.setKeterangan("KONEKSI BARU");
 				hk.setStatusAwal("BARU");
-//				hk.setStatusAkhir(null);
+				hk.setStatusAkhir("AKTIF");
 			}
 			//SAVE KONEKSI KE DB
 			koneksi = koneksiRepo.save(koneksi);
@@ -271,20 +273,6 @@ public class KoneksiServiceImple implements KoneksiService {
 			
 			}
 			
-//			//BISA UPDATE -> USER ID DB BEDA DENGAN INPUT
-//			if(!findData.getUserId().equalsIgnoreCase(input.getUserId())) {
-//				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - USER ID DB BEDA dengan Input ");
-//				findData.setUserId(input.getUserId().toUpperCase());
-//				penanda[2] = "Update";
-//			}
-//			//USER ID SAMA DENGAN INPUT
-//			else {
-//				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - USER ID DB SAMA dengan Input ");
-//				response.setUserIdNew("");
-//				penanda[2] = "No Update";
-//			
-//			}
-			
 			//BISA UPDATE -> STATUS DB BEDA SAMA INPUT
 			if(!findData.getStatus().equalsIgnoreCase(input.getStatus())) {
 				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - STATUS DB BEDA dengan Input ");
@@ -342,11 +330,6 @@ public class KoneksiServiceImple implements KoneksiService {
 			response.setCabangNew(objToken.getCabang().toUpperCase());
 		}
 		
-//		if(penanda[2].equalsIgnoreCase("Update")) {
-//			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Ada Update Untuk User ID ");
-//			response.getUserIdOld();
-//			response.setUserIdNew(findData.getUserId().toUpperCase());
-//		}
 		if(penanda[2].equalsIgnoreCase("Update")) {
 			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Ada Update Untuk Status ");
 			response.getStatusOld();

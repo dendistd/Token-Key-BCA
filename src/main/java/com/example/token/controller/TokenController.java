@@ -38,16 +38,6 @@ public class TokenController {
 	@Autowired
 	TokenService tokenService;
 	
-	//GET ALL TOKEN
-//	@GetMapping("tokenkeybca/token")
-//	public ResponseEntity<?> getAllToken(){
-//		ErrorSchema errorSchema = new ErrorSchema(ErrorEnum.GET_ALL);
-//		List<TokenModel> result = tokenService.getAllToken();
-//		ResponseSchema<List<TokenModel>> responseSchema = new ResponseSchema<>(errorSchema);
-//		responseSchema.setOutputSchema(result);
-//		return ResponseEntity.status(HttpStatus.OK).body(responseSchema);
-//	}
-	
 	//CREATE 
 	@PostMapping("tokenkeybca/token")
 	public ResponseEntity<?> createToken (@RequestBody InputCreateToken input){
@@ -97,7 +87,13 @@ public class TokenController {
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
 
 			}
-			
+			//TIDAK BISA DELETE DATA YG STATUS AKTIF
+			if(result.getStatus().equals("Can't Delete")) {
+				ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_DELETE);
+				ResponseSchema<GagalOutputSchema> responseFail = new ResponseSchema<>(errorFail);
+				responseFail.setOutputSchema(new GagalOutputSchema("Can't Delete Data Because Status = 'AKTIF'"));
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
+			}
 			//JIKA DATA SUDAH TERHAPUS RETURNKAN STRING ""
 			if(result.getStatus().equals("")) {
 				ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_DELETE);
@@ -126,7 +122,7 @@ public class TokenController {
 		ResponseSchema<Map<String, String>> responseSchema = new ResponseSchema<>(errorSchema);
 		ResponseUpdateToken result = new ResponseUpdateToken();
 		Map<String, String> map = new LinkedHashMap<String, String>();
-//		try {
+		try {
 			result = tokenService.updateTokenCabang(input);
 			//JIKA DATA TIDAK DITEMUKAN
 			if(result.getSerialNumber().equals("")) {
@@ -163,49 +159,18 @@ public class TokenController {
 				map.put("cabang_old", result.getCabangOld());
 				map.put("cabang_new", result.getCabangNew().toUpperCase());
 			}
+			//Kondisi Cabang TIDAK ADA UPDATE
+			if(result.getCabangNew().equalsIgnoreCase("No Update")) {
+				map.put("cabang", result.getCabangOld());
+			}
 			
 			if(!result.getStatusNew().equalsIgnoreCase("No Update")) {
 				map.put("status_old", result.getStatusOld());
 				map.put("status_new", result.getStatusNew().toUpperCase());
 			}
-			
-//		} catch(Exception e) {
-//			ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_UPDATE);
-//			ResponseSchema<GagalOutputSchema> responseFail = new ResponseSchema<>(errorFail);
-//			responseFail.setOutputSchema(new GagalOutputSchema(e.getMessage()));
-//			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
-//		}
-		responseSchema.setOutputSchema(map);
-		return ResponseEntity.status(HttpStatus.OK).body(responseSchema);
-	}
-	
-	//UPDATE TOKEN STATUS
-	@PutMapping("tokenkeybca/token/status")
-	public ResponseEntity<?> updateStatus(@RequestBody InputUpdateTokenStatus input){
-		ErrorSchema errorSchema = new ErrorSchema(ErrorEnum.UPDATE);
-		ResponseSchema<ResponseUpdateTokenStatus> responseSchema = new ResponseSchema<>(errorSchema);
-		ResponseUpdateTokenStatus result = new ResponseUpdateTokenStatus();
-		
-		try {
-			result = tokenService.updateTokenStatus(input);
-			//JIKA DATA TIDAK DITEMUKAN
-			if(result.getSerialNumber().equals("")) {
-				ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_UPDATE);
-				ResponseSchema<String> responseFail = new ResponseSchema<>(errorFail);
-				responseFail.setOutputSchema("null");
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
-			}
-			if(result.getStatusNew().equals("")) {
-				ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_UPDATE);
-				ResponseSchema<GagalOutputSchema> responseFail = new ResponseSchema<>(errorFail);
-				responseFail.setOutputSchema(new GagalOutputSchema("Value Status For Updating Data Is Incorrect !"));
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
-			}
-			if(result.getStatusNew().equals("No Update")) {
-				ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_UPDATE);
-				ResponseSchema<GagalOutputSchema> responseFail = new ResponseSchema<>(errorFail);
-				responseFail.setOutputSchema(new GagalOutputSchema("Tidak Ada Perubahan Data !"));
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
+			//Kondisi Status TIDAK ADA UPDATE
+			if(result.getStatusNew().equalsIgnoreCase("No Update")) {
+				map.put("status", result.getStatusOld());
 			}
 			
 		} catch(Exception e) {
@@ -214,10 +179,10 @@ public class TokenController {
 			responseFail.setOutputSchema(new GagalOutputSchema(e.getMessage()));
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
 		}
-		responseSchema.setOutputSchema(result);
+		responseSchema.setOutputSchema(map);
 		return ResponseEntity.status(HttpStatus.OK).body(responseSchema);
 	}
-	
+		
 	//FIND DATA BY STATUS
 	@GetMapping("tokenkeybca/token")
 	public ResponseEntity<?> findByStatus(@RequestBody InputFindStatus input){
@@ -237,6 +202,5 @@ public class TokenController {
 		responseSchema.setOutputSchema(result);
 		return ResponseEntity.status(HttpStatus.OK).body(responseSchema);
 	}
-
 
 }

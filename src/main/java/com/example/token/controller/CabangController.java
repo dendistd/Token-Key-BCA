@@ -159,10 +159,20 @@ public class CabangController {
 				map.put("nama_cabang_new", result.getNamaCabangNew().toUpperCase());
 			}
 			
+			//Jika NAMA Cabang nya TIDAK ADA UPDATE 
+			if(result.getNamaCabangNew().equalsIgnoreCase("No Update")) {
+				map.put("nama_cabang", result.getNamaCabangOld());
+			}
+			
 			if(!result.getStatusNew().equalsIgnoreCase("No Update")) {
 				map.put("status_old", result.getStatusOld());
 				map.put("status_new", result.getStatusNew().toUpperCase());
 			}
+			//Jika Status Cabang TIDAK ADA UPDATE 
+			if(result.getStatusNew().equalsIgnoreCase("No Update")) {
+				map.put("status", result.getStatusOld());
+			}
+			
 			
 		} catch (Exception e) {
 			ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_UPDATE);

@@ -121,8 +121,8 @@ public class KoneksiController {
 		ErrorSchema errorSchema = new ErrorSchema(ErrorEnum.UPDATE);
 		ResponseSchema<Map<String, String>> responseSchema = new ResponseSchema<>(errorSchema);
 		ResponseUpdateKoneksi result = new ResponseUpdateKoneksi();
-		
-//		try {
+		Map<String, String> map = new LinkedHashMap<>();
+		try {
 			result = koneksiService.updateKoneksi(input);
 			//KONDISI TIDAK ADA UPDATE DATA UNTUK SEMUA FIELD
 			if(result.getId().equalsIgnoreCase("No Update")) {
@@ -138,16 +138,7 @@ public class KoneksiController {
 				ResponseSchema<GagalOutputSchema> responseFail = new ResponseSchema<>(errorFail);
 				responseFail.setOutputSchema(new GagalOutputSchema("Value Input Update Param Tidak Memenuhi SYarat"));
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
-				/* response.setCabangNew("");
-			response.setDateKoneksiNew(null);
-			response.setId("");
-			response.setJenisKoneksiNew("");
-			response.setSerialNumberNew("");
-			response.setStatusNew("");
-			response.setUserIdNew(""); */
-		
-			}
-			Map<String, String> map = new LinkedHashMap<>();
+			}	
 			
 			map.put("id", result.getId());
 			
@@ -160,11 +151,7 @@ public class KoneksiController {
 				map.put("status_old", result.getStatusOld());
 				map.put("status_new", result.getStatusNew());
 			}
-			
-//			if(result.getUserIdNew() != null && !result.getUserIdNew().equals("") ){
-//				map.put("user_id_old", result.getUserIdOld());
-//				map.put("user_id_new", result.getUserIdNew());
-//			}
+		
 			map.put("user_id", result.getUserId());
 			
 			if(result.getDateKoneksiNew() != null ) {
@@ -182,14 +169,13 @@ public class KoneksiController {
 			}
 		
 			
-//		} catch (Exception e) {
-//			ErrorSchema errorFail = new ErrorSchema(ErrorEnum.UPDATE);
-//			ResponseSchema<GagalOutputSchema> responseFail = new ResponseSchema<>(errorFail);
-//			responseFail.setOutputSchema(new GagalOutputSchema(e.getMessage()));
-//			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
-//		}
-		
-		
+		} catch (Exception e) {
+			ErrorSchema errorFail = new ErrorSchema(ErrorEnum.UPDATE);
+			ResponseSchema<GagalOutputSchema> responseFail = new ResponseSchema<>(errorFail);
+			responseFail.setOutputSchema(new GagalOutputSchema(e.getMessage()));
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
+		}
+				
 		responseSchema.setOutputSchema(map);
 		return ResponseEntity.status(HttpStatus.OK).body(responseSchema);
 	}
