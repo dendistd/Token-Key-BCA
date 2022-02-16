@@ -39,13 +39,13 @@ public class CabangController {
 	//GET CABANG BY STATUS
 	@GetMapping("tokenkeybca/cabang")
 	public ResponseEntity<?> getCabangByStatus (@RequestBody InputGetCabangByStatus input) {
-		ErrorSchema errorSchema = new ErrorSchema(ErrorEnum.CREATE);
+		ErrorSchema errorSchema = new ErrorSchema(ErrorEnum.GET_ALL);
 		ResponseSchema<List<Cabang>> responseSchema = new ResponseSchema<>(errorSchema);
 		List<Cabang> result = new ArrayList<>();
 		try {
 			result = cabangService.getCabangByStatus(input);
 		} catch (Exception e) {
-			ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_CREATE);
+			ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_GET_ALL);
 			ResponseSchema<GagalOutputSchema> responseFail = new ResponseSchema<>(errorFail);
 			responseFail.setOutputSchema(new GagalOutputSchema(e.getMessage()));
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
