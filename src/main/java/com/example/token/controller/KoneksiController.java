@@ -126,7 +126,7 @@ public class KoneksiController {
 			result = koneksiService.updateKoneksi(input);
 			//KONDISI TIDAK ADA UPDATE DATA UNTUK SEMUA FIELD
 			if(result.getId().equalsIgnoreCase("No Update")) {
-				ErrorSchema errorFail = new ErrorSchema(ErrorEnum.UPDATE);
+				ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_UPDATE);
 				ResponseSchema<GagalOutputSchema> responseFail = new ResponseSchema<>(errorFail);
 				responseFail.setOutputSchema(new GagalOutputSchema("Tidak Ada Perubahan Data"));
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
@@ -134,7 +134,7 @@ public class KoneksiController {
 			
 			//KONDISI TIDAK BISA UPDATE -> NILAI INPUT PARAM TIDAK SESUAI SYARAT
 			if(result.getId().equals("") ) {
-				ErrorSchema errorFail = new ErrorSchema(ErrorEnum.UPDATE);
+				ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_UPDATE);
 				ResponseSchema<GagalOutputSchema> responseFail = new ResponseSchema<>(errorFail);
 				responseFail.setOutputSchema(new GagalOutputSchema("Value Input Update Param Tidak Memenuhi SYarat"));
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
@@ -170,7 +170,7 @@ public class KoneksiController {
 		
 			
 		} catch (Exception e) {
-			ErrorSchema errorFail = new ErrorSchema(ErrorEnum.UPDATE);
+			ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_UPDATE);
 			ResponseSchema<GagalOutputSchema> responseFail = new ResponseSchema<>(errorFail);
 			responseFail.setOutputSchema(new GagalOutputSchema(e.getMessage()));
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
