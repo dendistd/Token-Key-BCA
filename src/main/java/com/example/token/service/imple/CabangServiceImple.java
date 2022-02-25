@@ -13,23 +13,26 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.token.model.Cabang;
+import com.example.token.model.LogTokenKeyBca;
 import com.example.token.payload.cabang.InputCreateCabang;
 import com.example.token.payload.cabang.InputDeleteCabang;
-import com.example.token.payload.cabang.InputGetCabangByStatus;
 import com.example.token.payload.cabang.InputUpdateCabang;
 import com.example.token.payload.cabang.InputUpdateStatusCabang;
+import com.example.token.payload.cabang.OutputGetCabang;
 import com.example.token.payload.cabang.ResponseCreateCabang;
 import com.example.token.payload.cabang.ResponseDataCabang;
 import com.example.token.payload.cabang.ResponseUpdateNamaCabang;
 import com.example.token.payload.cabang.ResponseUpdateCabang;
 import com.example.token.repository.CabangRepo;
+import com.example.token.repository.LogTokenKeyBcaRepository;
 import com.example.token.service.CabangService;
 
 @Service
 public class CabangServiceImple implements CabangService {
 	@Autowired
 	CabangRepo cabangRepo;
-	
+	@Autowired
+	LogTokenKeyBcaRepository logTokenKeyBcaRepository;
 	//FUNGSI UNTUK NUMBER LOG
 	public String logNumber() {
 		StringBuilder builder = new StringBuilder(6);
@@ -47,13 +50,33 @@ public class CabangServiceImple implements CabangService {
 		return formatter.format(date);
 	}
 	
-	//GET CABANG BY STATUS
-	public List<Cabang> getCabangByStatus (InputGetCabangByStatus input){
+	//GET CABANG BY STATUS 
+	public List<OutputGetCabang> getCabangByStatus(String input){
 		String valueLog = logNumber();
 		List<Cabang> list = new ArrayList<>();
-		list = cabangRepo.findByStatus(input.getStatus().toUpperCase());
+		List<OutputGetCabang> result = new ArrayList<>();
+		list = cabangRepo.findByStatus(input.toUpperCase());
 		System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Berhasil Menemukan Data");
-		return list;
+		//convert 
+		for(Cabang cb : list) {
+			OutputGetCabang output = new OutputGetCabang(cb.getKodeCabang(), cb.getNamaCabang(), cb.getStatus());
+			result.add(output);
+		}
+		System.out.println("["+valueLog + "]" +" - "+dateLog() + " - isi result = "+result.toString());
+		
+		if(result.size() != 0) {
+			//INSERT DATA KE TABEL DENDI_TOKEN_KEY_BCA_LOG
+			LogTokenKeyBca log = new LogTokenKeyBca();
+			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Blok Insert Data Tabel Dendi_Token_Key_Bca_Log");
+			log.setId(valueLog);
+			log.setCreateDate(new Date());
+			log.setTindakan("SELECT");
+			log.setKeterangan("SELECT DATA CABANG BERDASARKAN STATUS =" + input.toUpperCase());
+			log.setTabel("DENDI_CABANG");	
+			log = logTokenKeyBcaRepository.save(log); 
+		}
+		
+		return result;
 	}
 	
 	//CREATE 
@@ -69,6 +92,16 @@ public class CabangServiceImple implements CabangService {
 				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Value Status = AKTIF");
 				cabang = cabangRepo.save(cabang);
 				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Berhasil Save Ke DB");
+				//INSERT DATA KE TABEL LOG
+				LogTokenKeyBca log = new LogTokenKeyBca();
+				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Blok Insert Data Tabel Dendi_Token_Key_Bca_Log");
+				log.setId(valueLog);
+				log.setCreateDate(new Date());
+				log.setIdData(cabang.getKodeCabang());
+				log.setTabel("DENDI_CABANG");
+				log.setTindakan("CREATE");
+				log.setKeterangan("INSERT DATA CABANG BERDASARKAN KODE_CABANG = "+cabang.getKodeCabang());
+				log = logTokenKeyBcaRepository.save(log);
 			}
 			else {
 				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Value Status BUKAN AKTIF");
@@ -86,6 +119,7 @@ public class CabangServiceImple implements CabangService {
 		response.setNamaCabang(cabang.getNamaCabang());
 		response.setSerialNumber(RandomStringUtils.randomAlphanumeric(10).toUpperCase());
 		response.setStatus(cabang.getStatus());
+		
 		return response;
 	}
 	
@@ -100,6 +134,16 @@ public class CabangServiceImple implements CabangService {
 			findData.setStatus("HAPUS");
 			findData = cabangRepo.save(findData);
 			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Data Sudah Terhapus");
+			//INSERT DATA KE TABEL LOG
+			LogTokenKeyBca log = new LogTokenKeyBca();
+			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Blok Insert Data Tabel Dendi_Token_Key_Bca_Log");
+			log.setId(valueLog);
+			log.setCreateDate(new Date());
+			log.setIdData(findData.getKodeCabang());
+			log.setTabel("DENDI_CABANG");
+			log.setTindakan("DELETE");
+			log.setKeterangan("DELETE DATA CABANG BERDASARKAN KODE_CABANG = "+findData.getKodeCabang());
+			log = logTokenKeyBcaRepository.save(log);
 		}
 		else {
 			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Tidak Bisa Menghapus Data Yang Sudah Terhapus");
@@ -140,7 +184,6 @@ public class CabangServiceImple implements CabangService {
 			else {
 				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Tidak Bisa Update Data");
 				response.setStatusNew("");
-//				return response;
 			}
 		}
 		//TIDAK BISA UPDATE-> STATUS DB SAMA DENGAN INPUT
@@ -148,35 +191,40 @@ public class CabangServiceImple implements CabangService {
 			response.setStatusNew("No Update");
 			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Status DB SAMA Dengan Input");
 			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Isi Response = " + response.toString());
-//			return response;
 		}
 		
 		//BISA UPDATE-> NAMA CABANG DB BEDA DENGAN INPUT
 		if(!(findData.getNamaCabang().equalsIgnoreCase(input.getNamaCabang()) )) {
 			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Nama Cabang DB BEDA Dengan Input");
 			findData.setNamaCabang(input.getNamaCabang().toUpperCase());
-//			penanda[1] = "Terupdate";
 			response.setNamaCabangNew(findData.getNamaCabang().toUpperCase());
 		}
 		//TDK UPDATE -> NAMA CABANG DB SAMA DENGAN INPUT
 		else {
-
 			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Nama Cabang DB SAMA Dengan Input");
 			response.setNamaCabangNew("No Update");
-//			return response;
 		}
 		
 		//SAVE DB 
 		System.out.println("["+valueLog + "]" +" - "+dateLog() + " - isi findData = " + findData.toString());
-		findData = cabangRepo.save(findData);
-		System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Save DB Berhasil"+ findData.toString());
 		
-		System.out.println("["+valueLog + "]" +" - "+dateLog() + " - isi response = " + response.toString());
+		//BISA UPDATE JIKA KEDUA FIELD MEMENUHI KONDISI UNTUK UPDATE
+		if( !(response.getStatusNew().equals("") || response.getNamaCabangNew().equals("No Update") && !(response.getStatusNew().equals("No Update") || response.getNamaCabangNew().equals("No Update")) )) {
+			findData = cabangRepo.save(findData);
+			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Save DB Berhasil"+ findData.toString());
+			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - isi response = " + response.toString());
+			//INSERT DATA KE TABEL LOG
+			LogTokenKeyBca log = new LogTokenKeyBca();
+			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Blok Insert Data Tabel Dendi_Token_Key_Bca_Log");
+			log.setId(valueLog);
+			log.setCreateDate(new Date());
+			log.setIdData(findData.getKodeCabang());
+			log.setTabel("DENDI_CABANG");
+			log.setTindakan("UPDATE");
+			log.setKeterangan("UPDATE DATA CABANG BERDASARKAN KODE_CABANG = "+findData.getKodeCabang());
+			log = logTokenKeyBcaRepository.save(log);
+		}
 		return response;
-		
 	}
-	
-	
-	
 
 }

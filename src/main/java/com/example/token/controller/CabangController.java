@@ -10,11 +10,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.example.token.Enumeration.ErrorEnum;
 import com.example.token.model.Cabang;
 import com.example.token.payload.ErrorSchema;
@@ -22,9 +22,9 @@ import com.example.token.payload.GagalOutputSchema;
 import com.example.token.payload.ResponseSchema;
 import com.example.token.payload.cabang.InputCreateCabang;
 import com.example.token.payload.cabang.InputDeleteCabang;
-import com.example.token.payload.cabang.InputGetCabangByStatus;
 import com.example.token.payload.cabang.InputUpdateCabang;
 import com.example.token.payload.cabang.InputUpdateStatusCabang;
+import com.example.token.payload.cabang.OutputGetCabang;
 import com.example.token.payload.cabang.ResponseCreateCabang;
 import com.example.token.payload.cabang.ResponseDataCabang;
 import com.example.token.payload.cabang.ResponseUpdateNamaCabang;
@@ -37,11 +37,11 @@ public class CabangController {
 	CabangService cabangService;
 	
 	//GET CABANG BY STATUS
-	@GetMapping("tokenkeybca/cabang")
-	public ResponseEntity<?> getCabangByStatus (@RequestBody InputGetCabangByStatus input) {
+	@GetMapping("tokenkeybca/cabang/{input}")
+	public ResponseEntity<?> getCabangByStatus (@PathVariable("input") String input) {
 		ErrorSchema errorSchema = new ErrorSchema(ErrorEnum.GET_ALL);
-		ResponseSchema<List<Cabang>> responseSchema = new ResponseSchema<>(errorSchema);
-		List<Cabang> result = new ArrayList<>();
+		ResponseSchema<List<OutputGetCabang>> responseSchema = new ResponseSchema<>(errorSchema);
+		List<OutputGetCabang> result = new ArrayList<>();
 		try {
 			result = cabangService.getCabangByStatus(input);
 		} catch (Exception e) {
@@ -68,7 +68,7 @@ public class CabangController {
 				ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_CREATE);
 				ResponseSchema<GagalOutputSchema> responseFail = new ResponseSchema<>(errorFail);
 				responseFail.setOutputSchema(new GagalOutputSchema("Kode Cabang Sudah Ada Dalam DB"));
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
+				return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(responseFail);
 			}
 			//KONDISI GAGAL CREATE
 			if( result.getStatus().equals("")) {
@@ -81,7 +81,7 @@ public class CabangController {
 			ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_CREATE);
 			ResponseSchema<GagalOutputSchema> responseFail = new ResponseSchema<>(errorFail);
 			responseFail.setOutputSchema(new GagalOutputSchema(e.getMessage()));
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
+			return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(responseFail);
 		}
 		responseSchema.setOutputSchema(result);
 		return ResponseEntity.status(HttpStatus.OK).body(responseSchema);

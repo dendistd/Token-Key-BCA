@@ -5,7 +5,6 @@ import java.util.List;
 import com.example.token.model.TokenModel;
 import com.example.token.payload.token.InputCreateToken;
 import com.example.token.payload.token.InputDeleteToken;
-import com.example.token.payload.token.InputFindStatus;
 import com.example.token.payload.token.InputUpdateToken;
 import com.example.token.payload.token.InputUpdateTokenStatus;
 import com.example.token.payload.token.ResponseCreateToken;
@@ -25,5 +24,6 @@ public interface TokenService {
 	//UPDATE CABANG
 	public ResponseUpdateToken updateTokenCabang (InputUpdateToken input);
 		
-	public List<ResponseDataToken> findTokenByStatus(InputFindStatus input);
+	//GET TOKEN BY STATUS 
+	public List<ResponseDataToken> findTokenByStatus(String input);
 }

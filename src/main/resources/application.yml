@@ -11,8 +11,7 @@ spring:
     property-naming-strategy: SNAKE_CASE
     deserialization:
       fail-on-unknown-properties: true
-  application: 
-    name: demo-api
+ 
   datasource:
     url: jdbc:oracle:thin:@localhost:1521:xe
     username: system

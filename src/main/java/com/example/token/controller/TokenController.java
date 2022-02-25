@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.example.token.Enumeration.ErrorEnum;
 import com.example.token.model.TokenModel;
 import com.example.token.payload.ErrorSchema;
@@ -24,7 +23,6 @@ import com.example.token.payload.GagalOutputSchema;
 import com.example.token.payload.ResponseSchema;
 import com.example.token.payload.token.InputCreateToken;
 import com.example.token.payload.token.InputDeleteToken;
-import com.example.token.payload.token.InputFindStatus;
 import com.example.token.payload.token.InputUpdateToken;
 import com.example.token.payload.token.InputUpdateTokenStatus;
 import com.example.token.payload.token.ResponseCreateToken;
@@ -131,6 +129,15 @@ public class TokenController {
 				responseFail.setOutputSchema("null");
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
 			}
+			
+			//TIDAK BISA UPDATE -> STATUS CABANG = 'HAPUS'
+			if(result.getCabangNew().equals("Can't Update")) {
+				ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_UPDATE);
+				ResponseSchema<GagalOutputSchema> responseFail = new ResponseSchema<>(errorFail);
+				responseFail.setOutputSchema(new GagalOutputSchema("Can't Update Cabang, Because Status Cabang is 'HAPUS'"));
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
+
+			}
 			//KONDISI VALUE CABANG BERISI STRING KOSONG "" ATAU SPASI
 			if(result.getCabangNew().equals("")) {
 				ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_UPDATE);
@@ -182,10 +189,10 @@ public class TokenController {
 		responseSchema.setOutputSchema(map);
 		return ResponseEntity.status(HttpStatus.OK).body(responseSchema);
 	}
-		
-	//FIND DATA BY STATUS
-	@GetMapping("tokenkeybca/token")
-	public ResponseEntity<?> findByStatus(@RequestBody InputFindStatus input){
+			
+	//GET TOKEN BY STATUS 
+	@GetMapping("tokenkeybca/token/{input}")
+	public ResponseEntity<?> findByStatus(@PathVariable("input") String input){
 		ErrorSchema errorSchema = new ErrorSchema(ErrorEnum.FIND_ONE);
 		ResponseSchema<List<ResponseDataToken>> responseSchema = new ResponseSchema<>(errorSchema);
 		List<ResponseDataToken> result = new ArrayList<>();
@@ -202,5 +209,4 @@ public class TokenController {
 		responseSchema.setOutputSchema(result);
 		return ResponseEntity.status(HttpStatus.OK).body(responseSchema);
 	}
-
 }

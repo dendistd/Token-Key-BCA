@@ -17,19 +17,15 @@ public class InputUpdateKoneksi {
 	@JsonProperty("status")
 	private String status;
 	
-	@JsonProperty("kode_cabang")
-	private String kodeCabang;
-
 	public InputUpdateKoneksi() {
 	super();
 	}
 
-	public InputUpdateKoneksi(String id, String serialNumber, String status, String kodeCabang) {
+	public InputUpdateKoneksi(String id, String serialNumber, String status) {
 		super();
 		this.id = id;
 		this.serialNumber = serialNumber;
 		this.status = status;
-		this.kodeCabang = kodeCabang;
 	}
 
 
@@ -57,19 +53,10 @@ public class InputUpdateKoneksi {
 		this.status = status;
 	}
 
-	public String getKodeCabang() {
-		return kodeCabang;
-	}
-
-	public void setKodeCabang(String kodeCabang) {
-		this.kodeCabang = kodeCabang;
-	}
-
-
 	@Override
 	public String toString() {
 		return "InputUpdateKoneksi [id=" + id + ", serialNumber=" + serialNumber + ", status="
-				+ status + ", kodeCabang=" + kodeCabang + "]";
+				+ status + "]";
 	}
 	
 

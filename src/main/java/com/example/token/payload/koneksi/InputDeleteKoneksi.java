@@ -4,28 +4,28 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class InputDeleteKoneksi {
 	@JsonProperty("user_id")
-	private String userID;
+	private String userId;
 
 	public InputDeleteKoneksi() {
 		super();
 	}
 
-	public InputDeleteKoneksi(String userID) {
+	public InputDeleteKoneksi(String userId) {
 		super();
-		this.userID = userID;
+		this.userId = userId;
 	}
 
-	public String getUserID() {
-		return userID;
+	public String getUserId() {
+		return userId;
 	}
 
-	public void setUserID(String userID) {
-		this.userID = userID;
+	public void setUserId(String userId) {
+		this.userId = userId;
 	}
 
 	@Override
 	public String toString() {
-		return "InputDeleteKoneksi [userID=" + userID + "]";
+		return "InputDeleteKoneksi [userId=" + userId + "]";
 	}
 	
 	

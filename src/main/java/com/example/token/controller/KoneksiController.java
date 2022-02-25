@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,7 +24,6 @@ import com.example.token.payload.GagalOutputSchema;
 import com.example.token.payload.ResponseSchema;
 import com.example.token.payload.koneksi.InputCreateKoneksi;
 import com.example.token.payload.koneksi.InputDeleteKoneksi;
-import com.example.token.payload.koneksi.InputGetKoneksiByStatus;
 import com.example.token.payload.koneksi.InputUpdateKoneksi;
 import com.example.token.payload.koneksi.ResponseCreateKoneksi;
 import com.example.token.payload.koneksi.ResponseDataKoneksi;
@@ -36,12 +36,12 @@ public class KoneksiController {
 	KoneksiService koneksiService;
 	
 	//FIND KONEKSI BY STATUS
-	@GetMapping("tokenkeybca/koneksi")
-	public ResponseEntity<?> getKoneksiByStatus (@RequestBody InputGetKoneksiByStatus input){
+	@GetMapping("tokenkeybca/koneksi/{input}")
+	public ResponseEntity<?> getKoneksiByStatus (@PathVariable("input") String input){
 		ErrorSchema errorSchema = new ErrorSchema(ErrorEnum.GET_ALL);
 		ResponseSchema<List<Koneksi>> responseSchema = new ResponseSchema<>(errorSchema);
 		List<Koneksi> result = new ArrayList<>();
-		
+
 		try {
 			result = koneksiService.findKoneksiByStatus(input);
 		} catch (Exception e) {
@@ -63,6 +63,7 @@ public class KoneksiController {
 		
 		try {
 			result = koneksiService.deleteKoneksi(input);
+			
 			//KONDISI USERID TIDAK ADA DALAM DB
 			if(result.getId().equals("")) {
 				ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_DELETE);
@@ -96,7 +97,15 @@ public class KoneksiController {
 		
 		try {
 			result = koneksiService.createKoneksi(input);
-			
+			//SN TIDAK ADA DALAM DB
+			if(result.getId().equals("null")) {
+				System.out.println("Controller => Masuk IF SN Tidak ada Dalam DB");
+				ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_CREATE);
+				ResponseSchema<GagalOutputSchema> responseFail = new ResponseSchema<GagalOutputSchema>(errorFail);
+				responseFail.setOutputSchema(new GagalOutputSchema("SN Doesn't Exist On DB"));
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
+				
+			}
 			//KONDISI TIDAK MEMENUHI SYARAT
 			if(result.getId().equals("")) {
 				ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_CREATE);
@@ -163,12 +172,7 @@ public class KoneksiController {
 				map.put("jenis_koneksi_old", result.getJenisKoneksiOld());
 				map.put("jenis_koneksi_new", result.getJenisKoneksiNew());
 			}
-			if(result.getCabangNew() != null ) {
-				map.put("cabang_old", result.getCabangOld());
-				map.put("cabang_new", result.getCabangNew());
-			}
 		
-			
 		} catch (Exception e) {
 			ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_UPDATE);
 			ResponseSchema<GagalOutputSchema> responseFail = new ResponseSchema<>(errorFail);
