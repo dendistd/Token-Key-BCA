@@ -152,7 +152,7 @@ public class TokenController {
 				responseFail.setOutputSchema(new GagalOutputSchema("Value Status For Updating Data Is Incorrect !"));
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
 			}
-			
+			//TIDAK ADA UPDATE 
 			if(result.getCabangNew().equals("No Update") && result.getStatusNew().equals("No Update")) {
 				ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_UPDATE);
 				ResponseSchema<GagalOutputSchema> responseFail = new ResponseSchema<>(errorFail);

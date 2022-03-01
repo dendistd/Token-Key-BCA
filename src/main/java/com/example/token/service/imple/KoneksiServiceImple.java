@@ -66,17 +66,24 @@ public class KoneksiServiceImple implements KoneksiService {
 		String valueLog = logNumber();
 		List<Koneksi> list = koneksiRepo.findByStatus(input.toUpperCase());
 		System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Data Berhasil Ditemukan");
+		
+		LogTokenKeyBca log = new LogTokenKeyBca();
+		log.setId(valueLog);
+		log.setCreateDate(new Date());
+		log.setTabel("DENDI_KONEKSI");
+		log.setTindakan("SELECT");
+		//KETERANGAN BERHASIL -> INSERT DENDI_TOKEN_KEY_BCA	
 		if(list.size() != 0) {
-			//INSERT DATA KE TABEL LOG
-			LogTokenKeyBca log = new LogTokenKeyBca();
-			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Blok Insert Data Tabel Dendi_Token_Key_Bca_Log");
-			log.setId(valueLog);
-			log.setCreateDate(new Date());
-			log.setTabel("DENDI_KONEKSI");
-			log.setTindakan("SELECT");
-			log.setKeterangan("SELECT DATA KONEKSI BERDASARKAN STATUS = "+input.toUpperCase());
-			log = logTokenKeyBcaRepository.save(log);
+			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - KETERANGAN BERHASIL -> Insert Data Tabel Dendi_Token_Key_Bca_Log");
+			log.setKeterangan("BERHASIL SELECT DATA KONEKSI BERDASARKAN STATUS = "+input.toUpperCase());
+			
 		}
+		//KETERANGAN GAGAL -> INSERT DENDI_TOKEN_KEY_BCA
+		else {
+			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - KETERANGAN GAGAL -> Insert Data Tabel Dendi_Token_Key_Bca_Log");
+			log.setKeterangan("GAGAL SELECT DATA KONEKSI BERDASARKAN STATUS = "+input.toUpperCase());
+		}
+		log = logTokenKeyBcaRepository.save(log);
 		return list;
 	}
 	
@@ -85,8 +92,18 @@ public class KoneksiServiceImple implements KoneksiService {
 		String valueLog = logNumber();
 		//KONDISI USERID TIDAK ADA DALAM DB
 		ResponseDataKoneksi responGagal = new ResponseDataKoneksi();
+		
+		LogTokenKeyBca log = new LogTokenKeyBca();
+		log.setId(valueLog);
+		log.setCreateDate(new Date());
+		log.setTabel("DENDI_KONEKSI");
+		log.setTindakan("DELETE");
 		if(!koneksiRepo.existsByUserId(input.getUserId().toUpperCase())) {
+			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - USER ID TIDAK DITEMUKAN");
 			responGagal.setId("");
+			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - KETERANGAN GAGAL -> Insert Data Tabel Dendi_Token_Key_Bca_Log");		
+			log.setKeterangan("GAGAL DELETE DATA KONEKSI BERDASARKAN USER ID = "+input.getUserId().toUpperCase());
+			log = logTokenKeyBcaRepository.save(log);
 			return responGagal;
 		}
 		
@@ -95,19 +112,14 @@ public class KoneksiServiceImple implements KoneksiService {
 		/* String id, Date dateKoneksi, String serialNumber, String userId, String jenisKoneksi,
 			String status */
 		ResponseDataKoneksi response = new ResponseDataKoneksi(findData.getId(), findData.getDateKoneksi(), findData.getSerialNumber(), findData.getUserId(), findData.getJenisKoneksi(), findData.getStatus());
+		log.setIdData(findData.getId());
 		
 		//Delete Data
 		koneksiRepo.delete(findData);
 		System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Data Berhasil Dihapus");
-		//INSERT DATA KE TABEL LOG
-		LogTokenKeyBca log = new LogTokenKeyBca();
-		System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Blok Insert Data Tabel Dendi_Token_Key_Bca_Log");
-		log.setId(valueLog);
-		log.setCreateDate(new Date());
-		log.setIdData(findData.getId());
-		log.setTabel("DENDI_KONEKSI");
-		log.setTindakan("DELETE");
-		log.setKeterangan("DELETE DATA KONEKSI BERDASARKAN USER ID = "+findData.getUserId());
+		//KETERANGAN BERHASIL -> INSERT TABEL DENDI_TOKEN_KEY_BCA_LOG
+		System.out.println("["+valueLog + "]" +" - "+dateLog() + " - KETERANGAN BERHASIL -> Insert Data Tabel Dendi_Token_Key_Bca_Log");		
+		log.setKeterangan("BERHASIL DELETE DATA KONEKSI BERDASARKAN USER ID = "+findData.getUserId());
 		log = logTokenKeyBcaRepository.save(log);
 		
 		return response;
@@ -121,10 +133,20 @@ public class KoneksiServiceImple implements KoneksiService {
 		HistoryKoneksi hk = new HistoryKoneksi();
 		TokenModel objToken = new TokenModel();
 		
+		LogTokenKeyBca log = new LogTokenKeyBca();
+		log.setId(valueLog);
+		log.setCreateDate(new Date());
+		log.setTabel("DENDI_KONEKSI");
+		log.setTindakan("CREATE");
+
+		
 		//SN TIDAK ADA DALAM DB
 		if(tokenRepo.existsBySerialNumber(input.getSerialNumber().toUpperCase()) == false) {
 			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - SN TIDAK ADA Dalam DB");
 			response.setId("null");
+			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - KETERANGAN GAGAL -> Insert Data Tabel Dendi_Token_Key_Bca_Log");
+			log.setKeterangan("GAGAL CREATE DATA KONEKSI BERDASARKAN SERIAL NUMBER = "+input.getSerialNumber());
+			log = logTokenKeyBcaRepository.save(log);
 			return response;
 		}
 		
@@ -144,6 +166,8 @@ public class KoneksiServiceImple implements KoneksiService {
 			hk.setSerialNumber(koneksi.getSerialNumber());
 			hk.setUserId(koneksi.getUserId());
 			
+			log.setIdData(koneksi.getId());
+			
 			//JIKA STATUS SN TOKEN -> "AKTIF" 
 			if(koneksiRepo.cekSNKoneksi(input.getSerialNumber().toUpperCase()).get("status").equals("AKTIF")) {
 				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Kondisi SN Token Status = 'AKTIF'");
@@ -151,8 +175,7 @@ public class KoneksiServiceImple implements KoneksiService {
 				//HISTORY KONEKSI
 				hk.setKeterangan("TAMBAH KONEKSI");
 				hk.setStatusAwal("BARU");
-				hk.setStatusAkhir("AKTIF");
-				
+				hk.setStatusAkhir("AKTIF");				
 			}
 			//JIKA STATUS SN TOKEN -> "BARU"
 			if(koneksiRepo.cekSNKoneksi(input.getSerialNumber().toUpperCase()).get("status").equals("BARU")) {
@@ -186,16 +209,9 @@ public class KoneksiServiceImple implements KoneksiService {
 			hk = historyKoneksiRepo.save(hk);
 			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Berhasil Save Histtory Koneksi Ke DB");
 			
-			//INSERT DATA KE TABEL LOG
-			LogTokenKeyBca log = new LogTokenKeyBca();
-			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Blok Insert Data Tabel Dendi_Token_Key_Bca_Log");
-			log.setId(valueLog);
-			log.setCreateDate(new Date());
-			log.setIdData(koneksi.getId());
-			log.setTabel("DENDI_KONEKSI");
-			log.setTindakan("CREATE");
-			log.setKeterangan("CREATE DATA KONEKSI BERDASARKAN SERIAL NUMBER = "+koneksi.getSerialNumber());
-			log = logTokenKeyBcaRepository.save(log);
+			//KETERANGAN BERHASIL -> INSERT DENDI_TOKEN_KEY_BCA_LOG			
+			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - KETERANGAN BERHASIL -> Insert Data Tabel Dendi_Token_Key_Bca_Log");
+			log.setKeterangan("BERHASIL CREATE DATA KONEKSI BERDASARKAN SERIAL NUMBER = "+koneksi.getSerialNumber());
 		}
 		
 		else {
@@ -206,7 +222,13 @@ public class KoneksiServiceImple implements KoneksiService {
 			koneksi.setUserId("");
 			koneksi.setDateKoneksi(null);
 			koneksi.setJenisKoneksi("");
+			//KETERANGAN GAGAL -> INSERT DENDI_TOKEN_KEY_BCA_LOG			
+			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - KETERANGAN GAGAL -> Insert Data Tabel Dendi_Token_Key_Bca_Log");
+			log.setKeterangan("GAGAL CREATE DATA KONEKSI BERDASARKAN SERIAL NUMBER = "+input.getSerialNumber());
 		}
+		//SAVE KE TABEL DENDI_TOKEN_KEY_BCA_LOG
+		log = logTokenKeyBcaRepository.save(log);
+		
 		response.setId(koneksi.getId());
 		response.setDateKoneksi(koneksi.getDateKoneksi());
 		response.setJenisKoneksi(koneksi.getJenisKoneksi());
@@ -230,13 +252,18 @@ public class KoneksiServiceImple implements KoneksiService {
 				Apabila insert data history gagal maka batal update data koneksi.
 			g.	Kirim error schema dan output schema sesuai dengan kondisi dan isi tabel.
 		 */
-		String valueLog = logNumber();
-		
+		String valueLog = logNumber();		
 		Koneksi findData = koneksiRepo.findById(input.getId().toUpperCase()).get();
 		HistoryKoneksi hk = new HistoryKoneksi();
 		TokenModel objToken = new TokenModel();
 		String[] penanda = new String[2];
-				
+		
+		LogTokenKeyBca log = new LogTokenKeyBca();
+		log.setId(valueLog);
+		log.setCreateDate(new Date());
+		log.setIdData(findData.getId());
+		log.setTabel("DENDI_KONEKSI");
+		log.setTindakan("UPDATE");		
 		/* String id, Date dateKoneksi, String serialNumber, String userId, String jenisKoneksi,
 			String status */
 		ResponseUpdateKoneksi response = new ResponseUpdateKoneksi(findData.getId(), findData.getDateKoneksi(), findData.getSerialNumber()
@@ -308,16 +335,10 @@ public class KoneksiServiceImple implements KoneksiService {
 				findData = koneksiRepo.save(findData);
 				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Berhasil Save ke Dendi_Koneksi ");
 				
-				//INSERT DATA KE TABEL LOG
-				LogTokenKeyBca log = new LogTokenKeyBca();
-				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Blok Insert Data Tabel Dendi_Token_Key_Bca_Log");
-				log.setId(valueLog);
-				log.setCreateDate(new Date());
-				log.setIdData(findData.getId());
-				log.setTabel("DENDI_KONEKSI");
-				log.setTindakan("UPDATE");
-				log.setKeterangan("UPDATE DATA KONEKSI BERDASARKAN ID = "+findData.getId());
-				log = logTokenKeyBcaRepository.save(log);
+				//KETERANGAN  BERHASIL -> INSERT DATA KE TABEL DENDI_TOKEN_KEY_BCA_LOG
+				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - KETERANGAN BERHASIL-> Insert Data Tabel Dendi_Token_Key_Bca_Log");
+				log.setKeterangan(" BERHASIL UPDATE DATA KONEKSI BERDASARKAN ID = "+findData.getId());
+				
 			}
 			
 		}//akhir if syarat
@@ -326,13 +347,19 @@ public class KoneksiServiceImple implements KoneksiService {
 		else {
 			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Kondisi Tidak Memenuhi SYarat = " + input.toString());
 			response.setId("");
+			
+			//KETERANGAN  GAGAL -> INSERT DATA KE TABEL DENDI_TOKEN_KEY_BCA_LOG
+			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - KETERANGAN GAGAL-> Insert Data Tabel Dendi_Token_Key_Bca_Log");
+			log.setKeterangan(" GAGAL UPDATE DATA KONEKSI BERDASARKAN ID = "+findData.getId());	
+			log = logTokenKeyBcaRepository.save(log);
 			return response;	
 		}
-		
 		//KONDISI NO UPDATE UNTUK SEMUA FIELD
 		if(penanda[0].equals("No Update") && penanda[1].equals("No Update")) {
 			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - NO UPDATE Untuk Semua Field ");
 			response.setId("No Update");
+			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - KETERANGAN GAGAL-> Insert Data Tabel Dendi_Token_Key_Bca_Log");
+			log.setKeterangan(" GAGAL UPDATE DATA KONEKSI BERDASARKAN ID = "+findData.getId());
 		}
 		
 		if(penanda[0].equalsIgnoreCase("Update")) {
@@ -346,6 +373,8 @@ public class KoneksiServiceImple implements KoneksiService {
 			response.getStatusOld();
 			response.setStatusNew(findData.getStatus().toUpperCase());
 		}
+		
+		log = logTokenKeyBcaRepository.save(log);
 		response.setDateKoneksiNew(findData.getDateKoneksi());
 		return response;	
 	}
