@@ -224,7 +224,7 @@ public class TokenServiceImple implements TokenService {
 		log.setTindakan("UPDATE");
 		
 		//JIKA DATA TIDAK DITEMUKAN
-		if(tokenRepo.existsBySerialNumber(input.getSerialNumber()) == false) {
+		if(tokenRepo.existsBySerialNumber(input.getSerialNumber().toUpperCase()) == false) {
 			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - SN TIDAK ADA Dalam DB");
 			responGagal.setSerialNumber("");
 			//SAVE KE TABEL DENDI_TOKEN_KEY_BCA_LOG
@@ -242,6 +242,30 @@ public class TokenServiceImple implements TokenService {
 		
 		//INSERT KE TABEL DENDI-TOKEN_KEY_BCA
 		log.setIdData(objToken.getId());
+		
+		// Bisa Update -> Status DB BEDA dengan Status  Input
+		if(!objToken.getStatus().equalsIgnoreCase(input.getStatus())) {
+			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Status DB BEDA Dengan Status Input");
+			if(input.getStatus().equalsIgnoreCase("baru") || input.getStatus().equalsIgnoreCase("aktif") || input.getStatus().equalsIgnoreCase("tdk aktif") || input.getStatus().equalsIgnoreCase("tutup")) {
+				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Value Status Sesuai Kondisi");
+				objToken.setStatus(input.getStatus().toUpperCase());
+				response.setStatusNew(objToken.getStatus().toUpperCase());
+			}
+			else {
+				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Value Status TIDAK Sesuai Kondisi");
+				response.setStatusNew("");
+						
+				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - KETERANGAN GAGAL Insert Data Tabel Dendi_Token_Key_Bca_Log");			
+				log.setKeterangan("GAGAL UPDATE DATA TOKEN BERDASARKAN SERIAL NUMBER = "+objToken.getSerialNumber());
+				log = logTokenKeyBcaRepository.save(log);
+						
+				return response;
+			}
+		}
+		else {
+			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - No Update For Status");
+			response.setStatusNew("No Update");
+		}
 		
 		//Bisa update -> CABANG DB BEDA DENGAN INPUT CABANG 
 		if(objToken.getCabang() == null || !objToken.getCabang().startsWith(input.getCabang().toUpperCase()) ) {
@@ -281,29 +305,7 @@ public class TokenServiceImple implements TokenService {
 			log.setKeterangan("GAGAL UPDATE DATA TOKEN BERDASARKAN SERIAL NUMBER = "+objToken.getSerialNumber());
 		}
 		
-		// Bisa Update -> Status DB BEDA dengan Status  Input
-		if(!objToken.getStatus().equalsIgnoreCase(input.getStatus())) {
-			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Status DB BEDA Dengan Status Input");
-			if(input.getStatus().equalsIgnoreCase("baru") || input.getStatus().equalsIgnoreCase("aktif") || input.getStatus().equalsIgnoreCase("tdk aktif") || input.getStatus().equalsIgnoreCase("tutup")) {
-				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Value Status Sesuai Kondisi");
-				objToken.setStatus(input.getStatus().toUpperCase());
-				response.setStatusNew(objToken.getStatus().toUpperCase());
-			}
-			else {
-				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Value Status TIDAK Sesuai Kondisi");
-				response.setStatusNew("");
-				
-				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - KETERANGAN GAGAL Insert Data Tabel Dendi_Token_Key_Bca_Log");			
-				log.setKeterangan("GAGAL UPDATE DATA TOKEN BERDASARKAN SERIAL NUMBER = "+objToken.getSerialNumber());
-				log = logTokenKeyBcaRepository.save(log);
-				
-				return response;
-			}
-		}
-		else {
-			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - No Update For Status");
-			response.setStatusNew("No Update");
-		}
+		
 		
 		//BERHASIL UPDATE DATA TOKEN
 		if(!response.getCabangNew().equals("No Update") || !response.getStatusNew().equals("No Update")) {

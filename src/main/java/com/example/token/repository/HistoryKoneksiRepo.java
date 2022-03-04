@@ -1,5 +1,7 @@
 package com.example.token.repository;
 
+import java.util.Map;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -16,4 +18,10 @@ public interface HistoryKoneksiRepo extends JpaRepository<HistoryKoneksi, String
 */
 //	@Query(value = "insert into dendi_history_koneksi (id, serial_number, user_id, status_awal, status_akhir, keterangan) values ()", nativeQuery = true)
 //	public void insertHistoryKoneksi (InputCreateKoneksi input);
+	
+//	@Query(value = "INSERT INTO (ID, SERIAL_NUMBER, USER_ID, STATUS_AWAL, STATUS_AKHIR) VALUES \r\n" + 
+//			"('EEGMIARAQCMU3OOGQC5G', 'SNBCA00013', 'UI13', 'BARU', 'AKTIF')", nativeQuery = true)
+	@Query(value = "INSERT INTO (SERIAL_NUMBER, USER_ID, STATUS_AWAL, STATUS_AKHIR) VALUES \r\n" + 
+			"(SELECT t.serial_number from dendi_token t where t.serial_number = :serialNumber, SELECT t.user_id from dendi_token t where t.user_id= :userId, 'BARU', 'AKTIF')", nativeQuery = true)
+	public Map<String, String> createHistoryKoneksi(String serialNumber, String userId);
 }

@@ -1,6 +1,6 @@
 ## Server properties
 server:
-  port: 8089
+  port: 8091
   
 ## Spring DATASOURCE
 spring:
@@ -11,8 +11,10 @@ spring:
     property-naming-strategy: SNAKE_CASE
     deserialization:
       fail-on-unknown-properties: true
- 
+
   datasource:
-    url: jdbc:oracle:thin:@localhost:1521:xe
-    username: system
-    password: Radenfaheza25
+   
+    url: jdbc:oracle:thin:@10.43.2.60:1525:diksei
+    username: iksei
+    password: BCAbca123
+    

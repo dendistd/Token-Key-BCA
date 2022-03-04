@@ -95,16 +95,23 @@ public class KoneksiController {
 		ResponseSchema<ResponseCreateKoneksi> responseSchema = new ResponseSchema<>(errorSchema);
 		ResponseCreateKoneksi result = new ResponseCreateKoneksi();
 		
-		try {
+//		try {
 			result = koneksiService.createKoneksi(input);
 			//SN TIDAK ADA DALAM DB
 			if(result.getId().equals("null")) {
-				System.out.println("Controller => Masuk IF SN Tidak ada Dalam DB");
 				ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_CREATE);
 				ResponseSchema<GagalOutputSchema> responseFail = new ResponseSchema<GagalOutputSchema>(errorFail);
 				responseFail.setOutputSchema(new GagalOutputSchema("SN Doesn't Exist On DB"));
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
 				
+			}
+			//Kode Cabang TIDAK ADA DALAM DB
+			if(result.getId().equals("none") && result.getCabang().equals("")) {
+				ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_CREATE);
+				ResponseSchema<GagalOutputSchema> responseFail = new ResponseSchema<GagalOutputSchema>(errorFail);
+				responseFail.setOutputSchema(new GagalOutputSchema("Kode Cabang Doesn't Exist In DB"));
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
+			
 			}
 			//KONDISI TIDAK MEMENUHI SYARAT
 			if(result.getId().equals("")) {
@@ -114,12 +121,13 @@ public class KoneksiController {
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
 			}
 			
-		} catch (Exception e) {
-			ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_CREATE);
-			ResponseSchema<GagalOutputSchema> responseFail = new ResponseSchema<>(errorFail);
-			responseFail.setOutputSchema(new GagalOutputSchema(e.getMessage()));
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
-		}
+//		} catch (Exception e) {
+//			System.out.println("Masuk Controller Catch");
+//			ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_CREATE);
+//			ResponseSchema<GagalOutputSchema> responseFail = new ResponseSchema<>(errorFail);
+//			responseFail.setOutputSchema(new GagalOutputSchema(e.getMessage()));
+//			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
+//		}
 		responseSchema.setOutputSchema(result);
 		return ResponseEntity.status(HttpStatus.OK).body(responseSchema);
 	}

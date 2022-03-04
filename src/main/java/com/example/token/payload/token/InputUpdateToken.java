@@ -7,7 +7,7 @@ public class InputUpdateToken {
 	@JsonProperty("serial_number")
 	private String serialNumber;
 	
-	@JsonProperty("cabang")
+	@JsonProperty("kode_cabang")
 	private String cabang;
 	
 	@JsonProperty("status")

@@ -96,7 +96,12 @@ public class CabangController {
 		
 		try {
 			result = cabangService.deleteCabang(input);
-			
+			if(result.getKodeCabang().equals("")) {
+				ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_DELETE);
+				ResponseSchema<GagalOutputSchema> responseFail = new ResponseSchema<>(errorFail);
+				responseFail.setOutputSchema(new GagalOutputSchema("Kode Cabang Tidak Ada Dalam DB"));
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
+			}
 			if(result.getStatus().equals("")) {
 				ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_DELETE);
 				ResponseSchema<ResponseDataCabang> responseFail = new ResponseSchema<>(errorFail);
@@ -126,7 +131,7 @@ public class CabangController {
 		ResponseUpdateCabang result = new ResponseUpdateCabang();
 		Map<String, String> map = new LinkedHashMap<>();
 		
-		try {
+//		try {
 			result = cabangService.updateCabang(input);
 			//KONDISI KODE_CABANG TIDAK ADA DALAM DB
 			if(result.getKodeCabang().equals("")) {
@@ -136,11 +141,11 @@ public class CabangController {
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
 			}
 			
-			//KONDISI TIDAK ADA UPDATE
-			if(result.getStatusNew().equalsIgnoreCase("No Update") && result.getNamaCabangNew().equalsIgnoreCase("No Update")) {
+			//KONDISI NAMA CABANG BERNILAI STRING KOSONG
+			if(result.getNamaCabangNew().equals("Can't Update")) {
 				ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_UPDATE);
 				ResponseSchema<GagalOutputSchema> responseFail = new ResponseSchema<>(errorFail);
-				responseFail.setOutputSchema(new GagalOutputSchema("Tidak Ada Perubahan Data"));
+				responseFail.setOutputSchema(new GagalOutputSchema("Tidak Bisa Mengupdate Nama Cabang Dengan Value String Kosong!"));
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
 			}
 			
@@ -149,6 +154,14 @@ public class CabangController {
 				ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_UPDATE);
 				ResponseSchema<GagalOutputSchema> responseFail = new ResponseSchema<>(errorFail);
 				responseFail.setOutputSchema(new GagalOutputSchema("Value Status Tidak Memenuhi Syarat"));
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
+			}
+					
+			//KONDISI TIDAK ADA UPDATE
+			if(result.getStatusNew().equalsIgnoreCase("No Update") && result.getNamaCabangNew().equalsIgnoreCase("No Update")) {
+				ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_UPDATE);
+				ResponseSchema<GagalOutputSchema> responseFail = new ResponseSchema<>(errorFail);
+				responseFail.setOutputSchema(new GagalOutputSchema("Tidak Ada Perubahan Data"));
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
 			}
 			
@@ -174,12 +187,12 @@ public class CabangController {
 			}
 			
 			
-		} catch (Exception e) {
-			ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_UPDATE);
-			ResponseSchema<GagalOutputSchema> responseFail = new ResponseSchema<>(errorFail);
-			responseFail.setOutputSchema(new GagalOutputSchema(e.getMessage()));
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
-		}
+//		} catch (Exception e) {
+//			ErrorSchema errorFail = new ErrorSchema(ErrorEnum.FAIL_UPDATE);
+//			ResponseSchema<GagalOutputSchema> responseFail = new ResponseSchema<>(errorFail);
+//			responseFail.setOutputSchema(new GagalOutputSchema(e.getMessage()));
+//			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseFail);
+//		}
 		responseSchema.setOutputSchema(map);
 		return ResponseEntity.status(HttpStatus.OK).body(responseSchema);
 	}

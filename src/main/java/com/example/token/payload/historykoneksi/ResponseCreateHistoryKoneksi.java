@@ -1,49 +1,34 @@
-package com.example.token.model;
+package com.example.token.payload.historykoneksi;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Entity
-@Table(name = "dendi_history_koneksi")
-public class HistoryKoneksi {
-	@Id
-	@Column(name = "id")
+public class ResponseCreateHistoryKoneksi {
+	@JsonProperty("id")
 	private String id;
 	
-	@Column(name = "serial_number")
+	@JsonProperty("serial_number")
 	private String serialNumber;
 	
-	@Column(name = "user_id")
+	@JsonProperty("user_id")
 	private String userId;
 	
-	@Column(name = "status_awal")
+	@JsonProperty("status_awal")
 	private String statusAwal;
 	
-	@Column(name = "status_akhir")
+	@JsonProperty("status_akhir")
 	private String statusAkhir;
 	
-	@Column(name = "keterangan")
+	@JsonProperty("keterangan")
 	private String keterangan;
 
-	public HistoryKoneksi() {
+	public ResponseCreateHistoryKoneksi() {
 		super();
 	}
 
-	public HistoryKoneksi(String id, String serialNumber, String userId, String statusAwal, String statusAkhir,
-			String keterangan) {
+	public ResponseCreateHistoryKoneksi(String id, String serialNumber, String userId, String statusAwal,
+			String statusAkhir) {
 		super();
 		this.id = id;
-		this.serialNumber = serialNumber;
-		this.userId = userId;
-		this.statusAwal = statusAwal;
-		this.statusAkhir = statusAkhir;
-		this.keterangan = keterangan;
-	}
-	
-	public HistoryKoneksi(String serialNumber, String userId, String statusAwal, String statusAkhir) {
-		super();
 		this.serialNumber = serialNumber;
 		this.userId = userId;
 		this.statusAwal = statusAwal;
@@ -100,8 +85,8 @@ public class HistoryKoneksi {
 
 	@Override
 	public String toString() {
-		return "HistoryKoneksi [id=" + id + ", serialNumber=" + serialNumber + ", userId=" + userId + ", statusAwal="
-				+ statusAwal + ", statusAkhir=" + statusAkhir + ", keterangan=" + keterangan + "]";
+		return "ResponseCreateHistoryKoneksi [id=" + id + ", serialNumber=" + serialNumber + ", userId=" + userId
+				+ ", statusAwal=" + statusAwal + ", statusAkhir=" + statusAkhir + ", keterangan=" + keterangan + "]";
 	}
 	
 	

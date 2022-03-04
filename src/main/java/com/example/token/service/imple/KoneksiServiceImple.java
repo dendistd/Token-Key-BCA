@@ -1,5 +1,6 @@
 package com.example.token.service.imple;
 
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -20,12 +21,16 @@ import com.example.token.payload.koneksi.InputUpdateKoneksi;
 import com.example.token.payload.koneksi.ResponseCreateKoneksi;
 import com.example.token.payload.koneksi.ResponseDataKoneksi;
 import com.example.token.payload.koneksi.ResponseUpdateKoneksi;
+import com.example.token.payload.token.InputUpdateToken;
+import com.example.token.payload.token.ResponseUpdateToken;
 import com.example.token.repository.CabangRepo;
 import com.example.token.repository.HistoryKoneksiRepo;
 import com.example.token.repository.KoneksiRepo;
 import com.example.token.repository.LogTokenKeyBcaRepository;
 import com.example.token.repository.TokenRepo;
+import com.example.token.service.HistoryKoneksiService;
 import com.example.token.service.KoneksiService;
+import com.example.token.service.TokenService;
 
 @Service
 public class KoneksiServiceImple implements KoneksiService {
@@ -43,6 +48,12 @@ public class KoneksiServiceImple implements KoneksiService {
 	
 	@Autowired
 	LogTokenKeyBcaRepository logTokenKeyBcaRepository;
+		
+	@Autowired
+	HistoryKoneksiService historyKoneksiService;
+	
+	@Autowired
+	TokenService tokenService;
 	
 	//FUNGSI UNTUK NUMBER LOG
 	public String logNumber() {
@@ -130,8 +141,9 @@ public class KoneksiServiceImple implements KoneksiService {
 		String valueLog = logNumber();
 		Koneksi koneksi = new Koneksi();
 		ResponseCreateKoneksi response = new ResponseCreateKoneksi();
-		HistoryKoneksi hk = new HistoryKoneksi();
+//		HistoryKoneksi hk = new HistoryKoneksi();
 		TokenModel objToken = new TokenModel();
+		ResponseUpdateToken objToken2 = new ResponseUpdateToken();
 		
 		LogTokenKeyBca log = new LogTokenKeyBca();
 		log.setId(valueLog);
@@ -139,7 +151,6 @@ public class KoneksiServiceImple implements KoneksiService {
 		log.setTabel("DENDI_KONEKSI");
 		log.setTindakan("CREATE");
 
-		
 		//SN TIDAK ADA DALAM DB
 		if(tokenRepo.existsBySerialNumber(input.getSerialNumber().toUpperCase()) == false) {
 			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - SN TIDAK ADA Dalam DB");
@@ -147,6 +158,17 @@ public class KoneksiServiceImple implements KoneksiService {
 			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - KETERANGAN GAGAL -> Insert Data Tabel Dendi_Token_Key_Bca_Log");
 			log.setKeterangan("GAGAL CREATE DATA KONEKSI BERDASARKAN SERIAL NUMBER = "+input.getSerialNumber());
 			log = logTokenKeyBcaRepository.save(log);
+			return response;
+		}
+		//KODE CABANG TIDAK ADA DALAM DENDI_CABANG
+		if(!cabangRepo.existsById(input.getKodeCabang().toUpperCase())) {
+			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Kode Cabang Tidak Ada Dalam DB");
+			response.setId("none");
+			response.setCabang("");
+			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - KETERANGAN GAGAL -> Insert Data Tabel Dendi_Token_Key_Bca_Log");
+			log.setKeterangan("GAGAL CREATE DATA KONEKSI BERDASARKAN SERIAL NUMBER = "+input.getSerialNumber());
+			log = logTokenKeyBcaRepository.save(log);
+			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Isi Response = "+response.toString());
 			return response;
 		}
 		
@@ -160,60 +182,45 @@ public class KoneksiServiceImple implements KoneksiService {
 			koneksi.setUserId(input.getUserId().toUpperCase());
 			Date date = new Date();
 			koneksi.setDateKoneksi(date);
-			
-			//INSERT DATA KE TABEL DENDI_HISTORY_KONEKSI
-			hk.setId(RandomStringUtils.randomAlphanumeric(20).toUpperCase());
-			hk.setSerialNumber(koneksi.getSerialNumber());
-			hk.setUserId(koneksi.getUserId());
-			
+		
 			log.setIdData(koneksi.getId());
 			
 			//JIKA STATUS SN TOKEN -> "AKTIF" 
 			if(koneksiRepo.cekSNKoneksi(input.getSerialNumber().toUpperCase()).get("status").equals("AKTIF")) {
 				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Kondisi SN Token Status = 'AKTIF'");
 				koneksi.setJenisKoneksi("TAMBAH");
-				//HISTORY KONEKSI
-				hk.setKeterangan("TAMBAH KONEKSI");
-				hk.setStatusAwal("BARU");
-				hk.setStatusAkhir("AKTIF");				
+				historyKoneksiService.createHistoryKoneksi(input);
+				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - STATUS 'AKTIF' -> History Koneksi Service Telah Dipanggil");				
+				objToken = tokenRepo.findBySerialNumber(input.getSerialNumber().toUpperCase());
+				response.setCabang(objToken.getCabang().toUpperCase());
 			}
 			//JIKA STATUS SN TOKEN -> "BARU"
 			if(koneksiRepo.cekSNKoneksi(input.getSerialNumber().toUpperCase()).get("status").equals("BARU")) {
 				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Kondisi SN Token Status = 'BARU'");
 				koneksi.setJenisKoneksi("BARU");
+				historyKoneksiService.createHistoryKoneksi(input);
+				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - STATUS 'BARU' ->History Koneksi Service Telah Dipanggil");
+
+				//PANGGIL UPDATE TOKENSERVICE				
+				InputUpdateToken inputUpdateToken = new InputUpdateToken();
+				inputUpdateToken.setSerialNumber(input.getSerialNumber().toUpperCase());
+				inputUpdateToken.setCabang(input.getKodeCabang().toUpperCase());
+				inputUpdateToken.setStatus(input.getStatus().toUpperCase());
+				objToken2 = tokenService.updateTokenCabang(inputUpdateToken);
+				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - STATUS SN 'BARU' ->UpdateToken Service Telah Dipanggil");
+				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - ISI OBJTOKEN2 = "+objToken2.toString());
 				
-				/*UPDATE VALUE CABANG DI TABEL DENDI_TOKEN */
-				//find Data Token Berdasarkan Input Param SN
-				objToken = tokenRepo.findBySerialNumber(input.getSerialNumber().toUpperCase());
-				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Data Token Berdasarkan Input Param SN DItemukan");
-				//Get Kode_Cabang & Nama_Cabang Dari Input Request Body  kode_cabang
-				Cabang cabang = cabangRepo.findById(input.getKodeCabang().toUpperCase()).get();
-				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Data Cabang Berdasarkan Input Param kode_cabang DItemukan");
-				
-				//UPDATE VALUE CABANG PADA DENDI_TOKEN -> KODE_CABANG - NAMA_CABANG
-				objToken.setCabang(cabang.getKodeCabang() + " - "+cabang.getNamaCabang());
-				objToken.setStatus("AKTIF");
-				objToken = tokenRepo.save(objToken);
-				System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Update Cabang Pada Dendi_Token Berhasil");
-				
-				//HISTORY KONEKSI
-				hk.setKeterangan("KONEKSI BARU");
-				hk.setStatusAwal("BARU");
-				hk.setStatusAkhir("AKTIF");
+				response.setCabang(objToken2.getCabangNew().toUpperCase());
+	
 			}
 			//SAVE KONEKSI KE DB
 			koneksi = koneksiRepo.save(koneksi);
-			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Berhasil Save Koneksi Ke DB");
-			
-			//SAVE HISTORY KONEKSI
-			hk = historyKoneksiRepo.save(hk);
-			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Berhasil Save Histtory Koneksi Ke DB");
-			
+			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Berhasil Save Koneksi Ke DB = "+koneksi.toString());
+		
 			//KETERANGAN BERHASIL -> INSERT DENDI_TOKEN_KEY_BCA_LOG			
 			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - KETERANGAN BERHASIL -> Insert Data Tabel Dendi_Token_Key_Bca_Log");
 			log.setKeterangan("BERHASIL CREATE DATA KONEKSI BERDASARKAN SERIAL NUMBER = "+koneksi.getSerialNumber());
 		}
-		
 		else {
 			System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Input Param Tidak Memnuhi Syarat");
 			koneksi.setId("");
@@ -228,15 +235,14 @@ public class KoneksiServiceImple implements KoneksiService {
 		}
 		//SAVE KE TABEL DENDI_TOKEN_KEY_BCA_LOG
 		log = logTokenKeyBcaRepository.save(log);
-		
+
 		response.setId(koneksi.getId());
 		response.setDateKoneksi(koneksi.getDateKoneksi());
 		response.setJenisKoneksi(koneksi.getJenisKoneksi());
 		response.setSerialNumber(koneksi.getSerialNumber());
-		response.setStatus(koneksi.getStatus());
-		response.setCabang(objToken.getCabang());
-		return response;
-		
+		response.setStatus(koneksi.getStatus());		
+		System.out.println("["+valueLog + "]" +" - "+dateLog() + " - Isi Response = "+response.toString());
+		return response;	
 	}
 	
 	//UPDATE KONEKSI 
